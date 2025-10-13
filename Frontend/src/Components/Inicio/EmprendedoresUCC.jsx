@@ -1,173 +1,15 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
+import { Users, ShoppingBag, Calendar } from 'lucide-react';
+import Header from '../Header.jsx';
+import Footer from '../Footer.jsx';
 import '../../CSS/Inicio/EmprendedoresUCC.css';
 
-export default function EmprenderUCC() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function EmprendedoresUCC() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  const navLinks = [
-    { icon: Home, label: 'Inicio', href: '#' },
-    { icon: Users, label: 'Emprendedores', href: '#' },
-    { icon: ShoppingBag, label: 'Productos', href: '#' },
-    { icon: Calendar, label: 'Eventos', href: '#' },
-    { icon: Mail, label: 'Contacto', href: '#' },
-  ];
 
   return (
     <div className="emprende-container">
-      {/* Header Fijo */}
-      <header className="emprende-header">
-        <div className="emprende-header-content">
-          <div className="emprende-header-top">
-            {/* Logo + Nombre */}
-            <div className="emprende-logo-section">
-              <div className="emprende-logo">
-                <span>U</span>
-              </div>
-              <span className="emprende-logo-text">
-                Emprende UCC
-              </span>
-            </div>
-
-            {/* Buscador - Desktop */}
-            <div className="emprende-search-desktop">
-              <div className="emprende-search-wrapper">
-                <input
-                  type="text"
-                  placeholder="Buscar emprendedores, productos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="emprende-search-input"
-                />
-                <Search className="emprende-search-icon" size={18} />
-              </div>
-            </div>
-
-            {/* Navegación - Desktop */}
-            <nav className="emprende-nav-desktop">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="emprende-nav-link"
-                >
-                  <link.icon size={18} />
-                  <span>{link.label}</span>
-                </a>
-              ))}
-            </nav>
-
-            {/* Botones de Acción - Desktop */}
-            <div className="emprende-actions-desktop">
-              {isLoggedIn ? (
-                <>
-                  <button className="emprende-btn-publish">
-                    <Plus size={18} />
-                    <span>Publicar</span>
-                  </button>
-                  <button className="emprende-btn-profile">
-                    <User size={18} />
-                  </button>
-                  <button
-                    onClick={() => setIsLoggedIn(false)}
-                    className="emprende-btn-logout"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setIsLoggedIn(true)}
-                    className="emprende-btn-login"
-                  >
-                    Iniciar Sesión
-                  </button>
-                  <button className="emprende-btn-register">
-                    Registrarse
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Botón Menú Móvil */}
-            <button
-              onClick={toggleMenu}
-              className="emprende-menu-toggle"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* Menú Móvil */}
-          {isMenuOpen && (
-            <div className="emprende-menu-mobile">
-              {/* Buscador Móvil */}
-              <div className="emprende-search-mobile">
-                <div className="emprende-search-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Buscar..."
-                    className="emprende-search-input"
-                  />
-                  <Search className="emprende-search-icon" size={18} />
-                </div>
-              </div>
-
-              {/* Enlaces Móvil */}
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="emprende-nav-link-mobile"
-                >
-                  <link.icon size={20} />
-                  <span>{link.label}</span>
-                </a>
-              ))}
-
-              {/* Botones Móvil */}
-              <div className="emprende-actions-mobile">
-                {isLoggedIn ? (
-                  <>
-                    <button className="emprende-btn-publish-mobile">
-                      <Plus size={18} />
-                      Publicar
-                    </button>
-                    <button className="emprende-btn-profile-mobile">
-                      <User size={18} />
-                      Mi Perfil
-                    </button>
-                    <button
-                      onClick={() => setIsLoggedIn(false)}
-                      className="emprende-btn-logout-mobile"
-                    >
-                      <LogOut size={18} />
-                      Cerrar sesión
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsLoggedIn(true)}
-                      className="emprende-btn-login-mobile"
-                    >
-                      Iniciar Sesión
-                    </button>
-                    <button className="emprende-btn-register-mobile">
-                      Registrarse
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
       {/* Contenido Principal */}
       <main className="emprende-main">
@@ -209,6 +51,8 @@ export default function EmprenderUCC() {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
