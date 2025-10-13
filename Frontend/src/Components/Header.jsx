@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
 import '../CSS/Header.css';
 
@@ -9,11 +10,11 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const navLinks = [
-    { icon: Home, label: 'Inicio', href: '#' },
-    { icon: Users, label: 'Emprendedores', href: '#' },
-    { icon: ShoppingBag, label: 'Productos', href: '#' },
-    { icon: Calendar, label: 'Eventos', href: '#' },
-    { icon: Mail, label: 'Contacto', href: '#' },
+    { icon: Home, label: 'Inicio', href: '/' },
+    { icon: Users, label: 'Emprendedores', href: '/emprendedores' },
+    { icon: ShoppingBag, label: 'Productos', href: '/productos' },
+    { icon: Calendar, label: 'Eventos', href: '/eventos' },
+    { icon: Mail, label: 'Contacto', href: '/contacto' },
   ];
 
   return (
@@ -47,14 +48,14 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
           {/* Navegación - Desktop */}
           <nav className="emprende-nav-desktop">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 className="emprende-nav-link"
               >
                 <link.icon size={18} />
                 <span>{link.label}</span>
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -78,15 +79,20 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
               </>
             ) : (
               <>
-                <button
-                  onClick={() => setIsLoggedIn(true)}
+                <Link
+                  to="/login"
                   className="emprende-btn-login"
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   Iniciar Sesión
-                </button>
-                <button className="emprende-btn-register">
+                </Link>
+                <Link
+                  to="/registro"
+                  className="emprende-btn-register"
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                >
                   Registrarse
-                </button>
+                </Link>
               </>
             )}
           </div>
@@ -117,14 +123,15 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
 
             {/* Enlaces Móvil */}
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 className="emprende-nav-link-mobile"
+                onClick={() => setIsMenuOpen(false)}
               >
                 <link.icon size={20} />
                 <span>{link.label}</span>
-              </a>
+              </Link>
             ))}
 
             {/* Botones Móvil */}
@@ -149,15 +156,22 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => setIsLoggedIn(true)}
+                  <Link
+                    to="/login"
                     className="emprende-btn-login-mobile"
+                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     Iniciar Sesión
-                  </button>
-                  <button className="emprende-btn-register-mobile">
+                  </Link>
+                  <Link
+                    to="/registro"
+                    className="emprende-btn-register-mobile"
+                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
                     Registrarse
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
