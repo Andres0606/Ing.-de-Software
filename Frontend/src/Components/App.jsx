@@ -1,11 +1,20 @@
-import { useState } from 'react'
-import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react'
-import EmprenderUCC from './Inicio/EmprendedoresUCC.jsx'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import EmprenderUCC from './Inicio/EmprendedoresUCC.jsx';
+import InicioSesion from './Sesiones/InicioSesion.jsx';
+import Registro from './Sesiones/Registro.jsx';
 
 function App() {
   return (
-    <EmprenderUCC />
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<EmprenderUCC />} />
+        <Route path="/login" element={<InicioSesion />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="*" element={<EmprenderUCC />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
