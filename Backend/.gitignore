@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Logs and temp
+logs/
+tmp/
+
+# Coverage and build artifacts
+coverage/
+dist/
+build/
