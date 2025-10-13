@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
 import '../../CSS/Inicio/EmprendedoresUCC.css';
 
@@ -81,15 +82,12 @@ export default function EmprenderUCC() {
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => setIsLoggedIn(true)}
-                    className="emprende-btn-login"
-                  >
+                  <Link to="/login" className="emprende-btn-login" style={{ textDecoration: 'none', display: 'inline-block' }}>
                     Iniciar Sesión
-                  </button>
-                  <button className="emprende-btn-register">
+                  </Link>
+                  <Link to="/registro" className="emprende-btn-register" style={{ textDecoration: 'none', display: 'inline-block' }}>
                     Registrarse
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
@@ -152,15 +150,12 @@ export default function EmprenderUCC() {
                   </>
                 ) : (
                   <>
-                    <button
-                      onClick={() => setIsLoggedIn(true)}
-                      className="emprende-btn-login-mobile"
-                    >
+                    <Link to="/login" className="emprende-btn-login-mobile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       Iniciar Sesión
-                    </button>
-                    <button className="emprende-btn-register-mobile">
+                    </Link>
+                    <Link to="/registro" className="emprende-btn-register-mobile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       Registrarse
-                    </button>
+                    </Link>
                   </>
                 )}
               </div>
