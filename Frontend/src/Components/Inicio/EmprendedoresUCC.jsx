@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
 import Footer from '../Footer.jsx';
 import '../../CSS/Inicio/EmprendedoresUCC.css';
+import '../../CSS/Header.css';
 
 export default function EmprendedoresUCC() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

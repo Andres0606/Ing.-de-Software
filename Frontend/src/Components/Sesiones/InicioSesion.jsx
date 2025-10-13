@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/InicioSesion.css';
 
 const InicioSesion = () => {
@@ -31,6 +32,7 @@ const InicioSesion = () => {
     return (
         <div className="auth-container">
         <div className="auth-card">
+            <Link to="/" className="back-link"><ArrowLeft size={16} /> Volver al menú</Link>
             <div className="auth-header">
             <div className="logo-container">
                 <div className="logo">U</div>
