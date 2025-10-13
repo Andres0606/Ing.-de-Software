@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
-import '../CSS/EmprendedoresUCC.css';
+import '../../CSS/Inicio/EmprendedoresUCC.css';
 
 export default function EmprenderUCC() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
