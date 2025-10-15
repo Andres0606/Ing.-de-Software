@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import EmprenderUCC from './Inicio/EmprendedoresUCC.jsx';
-import Emprendedores from './Sesiones/Emprendedores.jsx';
-import Productos from './Sesiones/Productos.jsx';
-import EventosUCC from './Sesiones/Eventos.jsx';
-import Contacto from './Sesiones/Contacto.jsx';
+import Emprendedores from './Inicio/Emprendedores.jsx';
+import Productos from './Inicio/Productos.jsx';
+import EventosUCC from './Inicio/Eventos.jsx';
+import Contacto from './Inicio/Contacto.jsx';
 import InicioSesion from './Sesiones/InicioSesion.jsx';
 import Registro from './Sesiones/Registro.jsx';
 
