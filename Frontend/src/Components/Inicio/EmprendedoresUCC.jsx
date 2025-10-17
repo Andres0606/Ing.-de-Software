@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
 import Footer from '../Footer.jsx';
@@ -6,9 +6,22 @@ import '../../CSS/Inicio/EmprendedoresUCC.css';
 import '../../CSS/Header.css';
 
 export default function EmprendedoresUCC() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!sessionStorage.getItem('user'));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const syncAuth = () => setIsLoggedIn(!!sessionStorage.getItem('user'));
+    syncAuth();
+    window.addEventListener('storage', syncAuth);
+    return () => window.removeEventListener('storage', syncAuth);
+  }, []);
+
+  const logout = () => {
+    sessionStorage.removeItem('user');
+    setIsLoggedIn(false);
+    window.location.href = '/';
+  };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -62,34 +75,23 @@ export default function EmprendedoresUCC() {
             <div className="emprende-actions-desktop">
               {isLoggedIn ? (
                 <>
+                  <Link to="/perfil" className="emprende-btn-profile" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <User size={18} />
+                  </Link>
                   <button className="emprende-btn-publish">
                     <Plus size={18} />
                     <span>Publicar</span>
                   </button>
-                  <button className="emprende-btn-profile">
-                    <User size={18} />
-                  </button>
-                  <button
-                    onClick={() => setIsLoggedIn(false)}
-                    className="emprende-btn-logout"
-                  >
+                  <button onClick={logout} className="emprende-btn-logout">
                     <LogOut size={18} />
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/login"
-                    className="emprende-btn-login"
-                    style={{ textDecoration: 'none', display: 'inline-block' }}
-                  >
+                  <Link to="/login" className="emprende-btn-login" style={{ textDecoration: 'none', display: 'inline-block' }}>
                     Iniciar Sesión
                   </Link>
-                  <Link
-                    to="/registro"
-                    className="emprende-btn-register"
-                    style={{ textDecoration: 'none', display: 'inline-block' }}
-                  >
+                  <Link to="/registro" className="emprende-btn-register" style={{ textDecoration: 'none', display: 'inline-block' }}>
                     Registrarse
                   </Link>
                 </>
@@ -129,30 +131,19 @@ export default function EmprendedoresUCC() {
                     <button className="emprende-btn-publish-mobile">
                       <Plus size={18} /> Publicar
                     </button>
-                    <button className="emprende-btn-profile-mobile">
+                    <Link to="/perfil" className="emprende-btn-profile-mobile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setIsMenuOpen(false)}>
                       <User size={18} /> Mi Perfil
-                    </button>
-                    <button
-                      onClick={() => setIsLoggedIn(false)}
-                      className="emprende-btn-logout-mobile"
-                    >
+                    </Link>
+                    <button onClick={logout} className="emprende-btn-logout-mobile">
                       <LogOut size={18} /> Cerrar sesión
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link
-                      to="/login"
-                      className="emprende-btn-login-mobile"
-                      style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
+                    <Link to="/login" className="emprende-btn-login-mobile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       Iniciar Sesión
                     </Link>
-                    <Link
-                      to="/registro"
-                      className="emprende-btn-register-mobile"
-                      style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
+                    <Link to="/registro" className="emprende-btn-register-mobile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       Registrarse
                     </Link>
                   </>

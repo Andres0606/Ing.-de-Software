@@ -1,0 +1,36 @@
+/* Reset y base */
+* {
+	box-sizing: border-box;
+}
+
+html, body, #root {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+	color: #1f2937;
+	background: #f8f9fa;
+}
+
+/* SweetAlert2 theme (project colors) */
+.swal2-popup-themed {
+	border-radius: 14px !important;
+}
+.swal2-confirm-btn {
+	background: linear-gradient(135deg, #78c257 0%, #a4d65e 100%) !important;
+	color: #fff !important;
+	border: none !important;
+}
+.swal2-confirm-btn:focus {
+	box-shadow: 0 0 0 3px rgba(120, 194, 87, 0.35) !important;
+}
+.swal2-cancel-btn {
+	background: #0099cc !important;
+	color: #fff !important;
+	border: none !important;
+}
+.swal2-cancel-btn:focus {
+	box-shadow: 0 0 0 3px rgba(0, 153, 204, 0.35) !important;
+}

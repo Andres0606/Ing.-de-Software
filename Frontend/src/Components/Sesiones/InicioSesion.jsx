@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/InicioSesion.css';
+import { api } from '../../api/client';
+import { alertError, alertSuccess } from '../../ui/alerts';
 
 const InicioSesion = () => {
     const [formData, setFormData] = useState({
@@ -9,6 +11,17 @@ const InicioSesion = () => {
         password: '',
         remember: false
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        // precargar email si "Recordarme" estaba activo
+        const remembered = localStorage.getItem('remember_login');
+        const savedEmail = localStorage.getItem('remember_email');
+        if (remembered === '1' && savedEmail) {
+            setFormData((prev) => ({ ...prev, email: savedEmail, remember: true }));
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -18,10 +31,34 @@ const InicioSesion = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login:', formData);
-        // Aquí puedes agregar la lógica para enviar los datos a tu API
+        setError('');
+        setLoading(true);
+        try {
+            const res = await api('/api/usuarios/login', {
+                method: 'POST',
+                body: JSON.stringify({ email: formData.email, password: formData.password })
+            });
+            // Guardar preferencia de recordar
+            if (formData.remember) {
+                localStorage.setItem('remember_login', '1');
+                localStorage.setItem('remember_email', formData.email);
+            } else {
+                localStorage.removeItem('remember_login');
+                localStorage.removeItem('remember_email');
+            }
+            // Guardar usuario en sessionStorage (simple)
+            sessionStorage.setItem('user', JSON.stringify(res.data));
+            await alertSuccess('¡Bienvenido/a!', `Hola ${res.data.nombre}`);
+            // Redirigir al inicio
+            window.location.href = '/';
+        } catch (err) {
+            setError(err.message || 'Error al iniciar sesión');
+            alertError('No pudimos iniciar sesión', err.message || 'Verifica tus credenciales.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSocialLogin = (provider) => {
@@ -44,6 +81,7 @@ const InicioSesion = () => {
             </div>
 
             <div className="auth-form">
+            {error && <div className="error-box" role="alert">{error}</div>}
             <div className="form-group">
                 <label htmlFor="email">Correo Electrónico</label>
                 <input
@@ -85,8 +123,8 @@ const InicioSesion = () => {
                 </a>
             </div>
 
-            <button onClick={handleSubmit} className="submit-btn">
-                Iniciar Sesión
+            <button onClick={handleSubmit} className="submit-btn" disabled={loading}>
+                {loading ? 'Ingresando…' : 'Iniciar Sesión'}
             </button>
 
             <p className="switch-text">

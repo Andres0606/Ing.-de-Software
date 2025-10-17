@@ -8,17 +8,20 @@ function parsePagination(req) {
 
 module.exports = {
   async list(req, res) {
-    try {
-      const { limit, offset } = parsePagination(req);
-      const rows = await query(
-        'SELECT e.*, u.nombre AS usuario_nombre, u.email AS usuario_email FROM emprendedores e LEFT JOIN usuarios u ON e.usuario_id = u.id LIMIT ? OFFSET ?',
-        [limit, offset]
-      );
-      res.json({ ok: true, data: rows });
-    } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
-    }
-  },
+  try {
+    const { limit, offset } = parsePagination(req);
+    const sql = `
+      SELECT e.*, u.nombre AS usuario_nombre, u.email AS usuario_email
+      FROM emprendedores e
+      LEFT JOIN usuarios u ON e.usuario_id = u.id
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    const rows = await query(sql);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+},
   async getById(req, res) {
     try {
       const id = parseInt(req.params.id, 10);

@@ -19,7 +19,6 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, env: env.nodeEnv });
 });
 
-// Simple DB ping route
 app.get('/api/db-ping', async (req, res) => {
   try {
     const rows = await query('SELECT NOW() as now');

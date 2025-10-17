@@ -3,7 +3,7 @@ import { Search, MapPin, Mail, Globe, Star, Filter, X } from 'lucide-react';
 import Header from '../Header';
 import Footer from '../Footer';
 import '../../CSS/Inicio/Emprendedores.css';
-import { api } from '../../api/client';
+import { api } from '../../api/client.js';
 
 export default function Emprendedores() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

@@ -7,6 +7,30 @@ function parsePagination(req) {
 }
 
 module.exports = {
+  async login(req, res) {
+    try {
+      const { email, password } = req.body || {};
+      if (!email || !password) {
+        return res.status(400).json({ ok: false, error: 'email y password son requeridos' });
+      }
+      const emailNorm = String(email).trim().toLowerCase();
+      const rows = await query('SELECT id, nombre, email, password, tipo_usuario, fecha_registro FROM usuarios WHERE LOWER(email) = LOWER(?) LIMIT 1', [emailNorm]);
+      if (rows.length === 0) {
+        return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
+      }
+      const user = rows[0];
+      // Nota: actualmente la contraseña se compara en texto plano según la BD existente
+      // Para producción se recomienda usar hashing (bcrypt) y tokens (JWT)
+      const match = String(password) === String(user.password);
+      if (!match) {
+        return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
+      }
+      const { password: _omit, ...safeUser } = user; // no exponer password
+      return res.json({ ok: true, data: safeUser });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  },
   async list(req, res) {
     try {
       const { limit, offset } = parsePagination(req);
