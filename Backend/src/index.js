@@ -7,6 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// API routers
+app.use('/api/usuarios', require('./routes/usuarios'));
+app.use('/api/emprendedores', require('./routes/emprendedores'));
+app.use('/api/productos', require('./routes/productos'));
+app.use('/api/eventos', require('./routes/eventos'));
+app.use('/api/contactos', require('./routes/contactos'));
+
 // Healthcheck
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, env: env.nodeEnv });

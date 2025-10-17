@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, MapPin, Mail, Globe, Star, Filter, X } from 'lucide-react';
 import Header from '../Header';
 import Footer from '../Footer';
-import '../../CSS/Sesiones/Emprendedores.css';
+import '../../CSS/Inicio/Emprendedores.css';
+import { api } from '../../api/client';
 
 export default function Emprendedores() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,74 +20,36 @@ export default function Emprendedores() {
     { id: 'servicios', label: 'Servicios' },
   ];
 
-  const emprendedores = [
-    {
-      id: 1,
-      nombre: 'María González',
-      categoria: 'tecnologia',
-      descripcion: 'Desarrolladora de apps móviles innovadoras',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'maria@example.com',
-      web: 'Red social',
-      calificacion: 4.8,
-      imagen: '👩‍💻',
-    },
-    {
-      id: 2,
-      nombre: 'Carlos Rodríguez',
-      categoria: 'salud',
-      descripcion: 'Especialista en nutrición deportiva',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'carlos@example.com',
-      web: 'Red social',
-      calificacion: 4.9,
-      imagen: '🏋️',
-    },
-    {
-      id: 3,
-      nombre: 'Ana Martínez',
-      categoria: 'educacion',
-      descripcion: 'Plataforma de educación online interactiva',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'ana@example.com',
-      web: 'Red social',
-      calificacion: 4.7,
-      imagen: '👩‍🏫',
-    },
-    {
-      id: 4,
-      nombre: 'Juan Pérez',
-      categoria: 'comercio',
-      descripcion: 'E-commerce de productos artesanales',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'juan@example.com',
-      web: 'Red social',
-      calificacion: 4.6,
-      imagen: '🛍️',
-    },
-    {
-      id: 5,
-      nombre: 'Sofia López',
-      categoria: 'servicios',
-      descripcion: 'Consultoría empresarial y marketing digital',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'sofia@example.com',
-      web: 'Red social',
-      calificacion: 4.9,
-      imagen: '💼',
-    },
-    {
-      id: 6,
-      nombre: 'Diego Ramírez',
-      categoria: 'tecnologia',
-      descripcion: 'Soluciones de ciberseguridad empresarial',
-      ubicacion: 'Villavicencio, Meta',
-      email: 'diego@example.com',
-      web: 'Red social',
-      calificacion: 4.8,
-      imagen: '🔐',
-    },
-  ];
+  const [emprendedores, setEmprendedores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    api('/api/emprendedores')
+      .then((res) => {
+        if (!mounted) return;
+        const data = Array.isArray(res?.data) ? res.data : [];
+        // Mapear mínimos esperados por la UI
+        const mapped = data.map((e) => ({
+          id: e.id,
+          nombre: e.usuario_nombre || `Emprendedor #${e.id}`,
+          categoria: e.categoria || 'otros',
+          descripcion: e.descripcion || '',
+          ubicacion: e.ubicacion || 'Villavicencio, Meta',
+          email: e.usuario_email || 'n/a',
+          web: 'red-social',
+          calificacion: Number(e.calificacion || 0),
+          imagen: e.imagen || '🧑‍💼',
+        }));
+        setEmprendedores(mapped);
+        setError('');
+      })
+      .catch((err) => setError(err.message || 'Error cargando emprendedores'))
+      .finally(() => mounted && setLoading(false));
+    return () => { mounted = false; };
+  }, []);
 
   const filteredEmprendedores = emprendedores.filter((emp) => {
     const matchesSearch =
@@ -99,6 +62,20 @@ export default function Emprendedores() {
 
     return matchesSearch && matchesCategory;
   });
+
+  if (loading) {
+    return (
+      <div className="emprendedores-container">
+        <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+        <main className="emprendedores-main">
+          <div className="emprendedores-search-section">
+            <h1 className="emprendedores-title">Cargando emprendedores...</h1>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="emprendedores-container">
@@ -167,7 +144,9 @@ export default function Emprendedores() {
 
           {/* Grid de emprendedores */}
           <section className="emprendedores-grid">
-            {filteredEmprendedores.length > 0 ? (
+            {error ? (
+              <div className="emprendedores-empty"><p>{error}</p></div>
+            ) : filteredEmprendedores.length > 0 ? (
               filteredEmprendedores.map((emp) => (
                 <div key={emp.id} className="emprendedor-card">
                   <div className="emprendedor-header">

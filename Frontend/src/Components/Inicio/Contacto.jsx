@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
 import Header from '../Header';
 import Footer from '../Footer';
-import '../../CSS/Sesiones/Contacto.css';
+import '../../CSS/Inicio/Contacto.css';
 
 export default function Contacto() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
