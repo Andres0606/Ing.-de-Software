@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/Registro.css';
+import { api, API_BASE_URL } from '../../api/client';
+import { alertError, alertSuccess } from '../../ui/alerts';
 
     const Registro = () => {
     const [formData, setFormData] = useState({
@@ -14,6 +16,8 @@ import '../../CSS/Sesiones/Registro.css';
     });
 
     const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -60,21 +64,43 @@ import '../../CSS/Sesiones/Registro.css';
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = validateForm();
-
-        if (Object.keys(newErrors).length === 0) {
-        console.log('Registro exitoso:', formData);
-        // Aquí puedes agregar la lógica para enviar los datos a tu API
-        } else {
-        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const payload = {
+                nombre: formData.nombre.trim(),
+                email: formData.email.trim(),
+                password: formData.password,
+                tipo_usuario: formData.tipoUsuario,
+            };
+            const res = await api('/api/usuarios', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+            await alertSuccess('Cuenta creada', `Bienvenido/a ${res.data.nombre}`);
+            navigate('/login', { replace: true });
+        } catch (err) {
+            const msg = err.message || 'Error al registrar';
+            if (msg.toLowerCase().includes('ya existe')) {
+                setErrors((prev) => ({ ...prev, email: 'El email ya está registrado' }));
+            }
+            alertError('No pudimos crear tu cuenta', msg);
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleSocialRegister = (provider) => {
-        console.log(`Registro con ${provider}`);
-        // Lógica para registro social
+        const base = API_BASE_URL || '';
+        const path = `/api/auth/${provider.toLowerCase()}/start`;
+        const url = base ? `${base}${path}` : path;
+        window.location.href = url;
     };
 
     return (
@@ -191,8 +217,8 @@ import '../../CSS/Sesiones/Registro.css';
                 )}
             </div>
 
-            <button onClick={handleSubmit} className="submit-btn">
-                Crear Cuenta
+            <button onClick={handleSubmit} className="submit-btn" disabled={submitting}>
+                {submitting ? 'Creando cuenta…' : 'Crear Cuenta'}
             </button>
 
             <p className="switch-text">

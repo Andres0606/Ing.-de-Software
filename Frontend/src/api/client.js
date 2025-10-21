@@ -1,7 +1,7 @@
-const baseURL = import.meta.env.VITE_API_URL || '';
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export async function api(path, options = {}) {
-  const url = baseURL ? `${baseURL}${path}` : path;
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   const init = { ...options, headers };
   const res = await fetch(url, init);
