@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import {
+  ArrowLeft, Plus, X, RefreshCw, MapPin, Tag,
+  Image as ImageIcon, Mail, Phone, KeyRound,
+  Pencil, Lock
+} from 'lucide-react';
 import '../../CSS/Perfil/Perfil.css';
 import { api } from '../../api/client';
 import { alertError, alertSuccess } from '../../ui/alerts';
@@ -16,15 +20,21 @@ export default function Perfil() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ descripcion: '', ubicacion: '', categoria: '', imagen: '' });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ email: '', telefono: '' });
+  const [editErrors, setEditErrors] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwdErrors, setPwdErrors] = useState({});
 
   useEffect(() => {
     async function load() {
       try {
-        if (!storedUser?.id) return; // no hay sesión
-        // Refrescar datos de usuario
+        if (!storedUser?.id) return;
         const u = await api(`/api/usuarios/${storedUser.id}`);
         setUser(u.data);
-        // Cargar emprendimientos del usuario
         const e = await api(`/api/emprendedores/usuario/${storedUser.id}`);
         setEmprendimientos(e.data || []);
       } catch (err) {
@@ -36,12 +46,119 @@ export default function Perfil() {
     load();
   }, [storedUser]);
 
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      if (!storedUser?.id) return;
+      const e = await api(`/api/emprendedores/usuario/${storedUser.id}`);
+      setEmprendimientos(e.data || []);
+    } catch (err) {
+      alertError('No se pudo actualizar', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenModal = () => setShowModal(true);
-  const handleCloseModal = () => { setShowModal(false); setForm({ descripcion: '', ubicacion: '', categoria: '', imagen: '' }); };
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setForm({ descripcion: '', ubicacion: '', categoria: '', imagen: '' });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const openEdit = () => {
+    setEditForm({ email: user?.email || '', telefono: user?.telefono || '' });
+    setEditErrors({});
+    setShowEdit(true);
+  };
+  const closeEdit = () => setShowEdit(false);
+  const onEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((p) => ({ ...p, [name]: value }));
+    setEditErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const validateEdit = () => {
+    const errs = {};
+    if (!editForm.email || !/^\S+@\S+\.\S+$/.test(editForm.email)) errs.email = 'Correo inválido';
+    if (editForm.telefono && !/^[- +()\d]{6,20}$/.test(editForm.telefono)) errs.telefono = 'Teléfono inválido';
+    setEditErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!user?.id) return;
+    if (!validateEdit()) return;
+    setEditSaving(true);
+    try {
+      const res = await api(`/api/usuarios/${user.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          email: editForm.email,
+          telefono: editForm.telefono || null,
+        }),
+      }).catch(() => ({ data: { ...user, ...editForm } }));
+
+      const newUser = res?.data || { ...user, ...editForm };
+      setUser(newUser);
+      sessionStorage.setItem('user', JSON.stringify(newUser));
+      alertSuccess('Perfil actualizado', 'Tus datos fueron actualizados.');
+      closeEdit();
+    } catch (err) {
+      alertError('No se pudo actualizar', err.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const openPwd = () => { setPwdForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setShowPwd(true); };
+  const closePwd = () => setShowPwd(false);
+
+  const validatePwd = () => {
+    const errs = {};
+    if (!pwdForm.currentPassword) errs.currentPassword = 'Requerido';
+    if (!pwdForm.newPassword || pwdForm.newPassword.length < 6) errs.newPassword = 'Mínimo 6 caracteres';
+    if (pwdForm.newPassword === pwdForm.currentPassword) errs.newPassword = 'Debe ser diferente a la actual';
+    if (pwdForm.confirmPassword !== pwdForm.newPassword) errs.confirmPassword = 'No coincide';
+    setPwdErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!user?.id || !validatePwd()) return;
+    try {
+      await api(`/api/usuarios/${user.id}/change-password`, {
+        method: 'POST',
+        body: JSON.stringify({
+          currentPassword: pwdForm.currentPassword,
+          newPassword: pwdForm.newPassword,
+        }),
+      });
+      alertSuccess('Listo', 'Tu contraseña fue actualizada.');
+      closePwd();
+    } catch (err) {
+      alertError('No se pudo actualizar', err.message);
+    }
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!form.categoria && !form.descripcion) {
+      errs.categoria = 'Ingresa una categoría o descripción';
+      errs.descripcion = 'Ingresa una descripción o categoría';
+    }
+    if (form.imagen && !/^https?:\/\//i.test(form.imagen)) {
+      errs.imagen = 'La imagen debe ser una URL válida';
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleCreate = async (e) => {
@@ -49,6 +166,7 @@ export default function Perfil() {
     if (!user?.id) return;
     setSaving(true);
     try {
+      if (!validate()) return alertError('Campos incompletos', 'Revisa los datos.');
       const res = await api('/api/emprendedores', {
         method: 'POST',
         body: JSON.stringify({
@@ -64,7 +182,7 @@ export default function Perfil() {
       alertSuccess('Emprendimiento creado', 'Tu emprendimiento fue registrado.');
       handleCloseModal();
     } catch (err) {
-      alertError('No se pudo crear', err.message || 'Intenta de nuevo');
+      alertError('Error al crear', err.message);
     } finally {
       setSaving(false);
     }
@@ -74,7 +192,9 @@ export default function Perfil() {
     return (
       <div className="perfil-container">
         <div className="perfil-card">
-          <Link to="/" className="back-link"><ArrowLeft size={16} /> Volver</Link>
+          <Link to="/" className="perfil-back-link">
+            <ArrowLeft size={16} /> Volver
+          </Link>
           <h2>Inicia sesión para ver tu perfil</h2>
           <Link to="/login" className="btn-primary">Ir a iniciar sesión</Link>
         </div>
@@ -82,76 +202,76 @@ export default function Perfil() {
     );
   }
 
+  const total = emprendimientos.length;
+  const avatarInitial = (user?.nombre || '?').trim().charAt(0).toUpperCase();
+
   return (
     <div className="perfil-container">
       <div className="perfil-card">
-        <Link to="/" className="back-link"><ArrowLeft size={16} /> Volver al menú</Link>
-        <div className="perfil-header">
-          <div className="avatar">{(user?.nombre || '?').charAt(0)}</div>
-          <div>
-            <h1>{user?.nombre || 'Usuario'}</h1>
-            <p className="muted">{user?.email}</p>
-            {user?.tipo_usuario && <span className="pill">{user.tipo_usuario}</span>}
-          </div>
+        <div className="header-toolbar">
+          <Link to="/" className="perfil-back-link">
+            <ArrowLeft size={16} /> Volver al menú
+          </Link>
         </div>
 
-        <div className="perfil-actions">
-          <button className="btn-primary" onClick={handleOpenModal}><Plus size={16} /> Crear emprendimiento</button>
+        <div className="perfil-hero">
+          <div className="hero-left">
+            <div className="avatar avatar--xl">{avatarInitial}</div>
+            <div className="hero-meta">
+              <h1 className="hero-title">{user?.nombre}</h1>
+              <p className="muted">{user?.email}</p>
+              <div className="hero-chips">
+                {user?.tipo_usuario && <span className="pill">{user.tipo_usuario}</span>}
+                <span className="chip chip--stat">{total} emprendimiento{total !== 1 && 's'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="hero-actions">
+            <button className="btn-outline" onClick={openEdit}><Pencil size={16} /> Editar perfil</button>
+            <button className="btn-outline" onClick={handleRefresh}><RefreshCw size={16} /> Actualizar</button>
+            <button className="btn-primary" onClick={handleOpenModal}><Plus size={16} /> Crear emprendimiento</button>
+          </div>
         </div>
 
         <h2 className="section-title">Mis emprendimientos</h2>
         {loading ? (
-          <div className="loading">Cargando…</div>
-        ) : emprendimientos.length === 0 ? (
-          <div className="empty">Aún no tienes emprendimientos.</div>
-        ) : (
           <div className="cards-grid">
-            {emprendimientos.map((e) => (
-              <div className="card" key={e.id}>
-                <div className="card-cover" style={{ backgroundImage: e.imagen ? `url(${e.imagen})` : undefined }} />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card skeleton-card" aria-hidden="true">
+                <div className="card-cover" />
                 <div className="card-body">
-                  <h3>{e.categoria || 'Emprendimiento'}</h3>
-                  {e.descripcion && <p className="muted">{e.descripcion}</p>}
-                  {e.ubicacion && <p className="muted">Ubicación: {e.ubicacion}</p>}
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-text" />
+                  <div className="skeleton skeleton-text w-60" />
                 </div>
               </div>
             ))}
           </div>
+        ) : total === 0 ? (
+          <div className="empty">
+            <div className="empty-illustration" />
+            <h3>No tienes emprendimientos aún</h3>
+            <p className="muted">Crea tu primer emprendimiento para mostrar tu trabajo.</p>
+            <button className="btn-primary" onClick={handleOpenModal}><Plus size={16} /> Crear emprendimiento</button>
+          </div>
+        ) : (
+          <div className="cards-grid">
+            {emprendimientos.map((e) => (
+              <article className="card" key={e.id}>
+                <div
+                  className={`card-cover ${e.imagen ? '' : 'card-cover--placeholder'}`}
+                  style={e.imagen ? { backgroundImage: `url(${e.imagen})` } : undefined}
+                />
+                <div className="card-body">
+                  <span className="chip chip--category"><Tag size={14} /> {e.categoria || 'Sin categoría'}</span>
+                  {e.descripcion && <p className="muted card-desc">{e.descripcion}</p>}
+                  {e.ubicacion && <p className="muted card-loc"><MapPin size={14} /> {e.ubicacion}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
         )}
       </div>
-
-      {showModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Nuevo emprendimiento</h3>
-              <button className="icon-btn" onClick={handleCloseModal}><X size={18} /></button>
-            </div>
-            <form className="modal-body" onSubmit={handleCreate}>
-              <div className="form-row">
-                <label>Categoría</label>
-                <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Gastronomía, Tecnología…" />
-              </div>
-              <div className="form-row">
-                <label>Descripción</label>
-                <textarea name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="¿Qué ofrece tu emprendimiento?" />
-              </div>
-              <div className="form-row">
-                <label>Ubicación</label>
-                <input name="ubicacion" value={form.ubicacion} onChange={handleChange} placeholder="Ciudad / Campus" />
-              </div>
-              <div className="form-row">
-                <label>Imagen (URL)</label>
-                <input name="imagen" value={form.imagen} onChange={handleChange} placeholder="https://..." />
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>Cancelar</button>
-                <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Crear'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

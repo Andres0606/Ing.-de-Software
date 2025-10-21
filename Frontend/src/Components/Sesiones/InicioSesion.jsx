@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/InicioSesion.css';
-import { api } from '../../api/client';
+import { api, API_BASE_URL } from '../../api/client';
 import { alertError, alertSuccess } from '../../ui/alerts';
 
 const InicioSesion = () => {
@@ -62,8 +62,10 @@ const InicioSesion = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        console.log(`Login con ${provider}`);
-        // Lógica para autenticación social
+        const base = API_BASE_URL || '';
+        const path = `/api/auth/${provider.toLowerCase()}/start`;
+        const url = base ? `${base}${path}` : path;
+        window.location.href = url;
     };
 
     return (

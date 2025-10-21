@@ -13,6 +13,7 @@ app.use('/api/emprendedores', require('./routes/emprendedores'));
 app.use('/api/productos', require('./routes/productos'));
 app.use('/api/eventos', require('./routes/eventos'));
 app.use('/api/contactos', require('./routes/contactos'));
+app.use('/api/auth', require('./routes/auth'));
 
 // Healthcheck
 app.get('/api/health', (req, res) => {
