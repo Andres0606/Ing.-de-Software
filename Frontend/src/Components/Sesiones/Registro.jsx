@@ -9,10 +9,14 @@ import { alertError, alertSuccess } from '../../ui/alerts';
     const Registro = () => {
     const [formData, setFormData] = useState({
         nombre: '',
+        apellido: '',
         email: '',
         password: '',
         confirmPassword: '',
-        tipoUsuario: 'emprendedor',
+        carrera: '',
+        telefono: '',
+        fechaNacimiento: '',
+        rol: 'estudiante', // 'estudiante', 'administrador', 'usuario_universidad'
         aceptaTerminos: false
     });
 
@@ -42,6 +46,10 @@ import { alertError, alertSuccess } from '../../ui/alerts';
         newErrors.nombre = 'El nombre es requerido';
         }
 
+        if (!formData.apellido.trim()) {
+        newErrors.apellido = 'El apellido es requerido';
+        }
+
         if (!formData.email.trim()) {
         newErrors.email = 'El email es requerido';
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -56,6 +64,27 @@ import { alertError, alertSuccess } from '../../ui/alerts';
 
         if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Las contraseñas no coinciden';
+        }
+
+        if (!formData.carrera.trim()) {
+        newErrors.carrera = 'La carrera es requerida';
+        }
+
+        if (!formData.telefono.trim()) {
+        newErrors.telefono = 'El teléfono es requerido';
+        } else if (!/^\d{10}$/.test(formData.telefono.replace(/\D/g, ''))) {
+        newErrors.telefono = 'El teléfono debe tener 10 dígitos';
+        }
+
+        if (!formData.fechaNacimiento) {
+        newErrors.fechaNacimiento = 'La fecha de nacimiento es requerida';
+        } else {
+        const fechaNac = new Date(formData.fechaNacimiento);
+        const hoy = new Date();
+        const edad = hoy.getFullYear() - fechaNac.getFullYear();
+        if (edad < 16) {
+            newErrors.fechaNacimiento = 'Debes ser mayor de 16 años';
+        }
         }
 
         if (!formData.aceptaTerminos) {
@@ -76,13 +105,17 @@ import { alertError, alertSuccess } from '../../ui/alerts';
         try {
             const payload = {
                 nombre: formData.nombre.trim(),
+                apellido: formData.apellido.trim(),
                 email: formData.email.trim(),
                 password: formData.password,
-                tipo_usuario: formData.tipoUsuario,
+                carrera: formData.carrera.trim(),
+                telefono: formData.telefono.trim(),
+                fecha_nacimiento: formData.fechaNacimiento,
+                rol: formData.rol,
             };
-            const res = await apiClient.post('/usuarios', payload); // ✅ Cambiado
+            const res = await apiClient.post('/usuarios', payload);
             const userData = res.data || res;
-            await alertSuccess('Cuenta creada', `Bienvenido/a ${userData.nombre}`);
+            await alertSuccess('Cuenta creada', `Bienvenido/a ${userData.nombre} ${userData.apellido}`);
             navigate('/login', { replace: true });
         } catch (err) {
             const msg = err.message || 'Error al registrar';
@@ -118,20 +151,38 @@ import { alertError, alertSuccess } from '../../ui/alerts';
             </div>
 
             <div className="auth-form">
-            <div className="form-group">
-                <label htmlFor="nombre">Nombre Completo</label>
-                <input
-                type="text"
-                id="nombre"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Tu nombre completo"
-                className={errors.nombre ? 'input-error' : ''}
-                />
-                {errors.nombre && (
-                <span className="error-message">{errors.nombre}</span>
-                )}
+            <div className="form-row">
+                <div className="form-group">
+                    <label htmlFor="nombre">Nombre</label>
+                    <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    placeholder="Tu nombre"
+                    className={errors.nombre ? 'input-error' : ''}
+                    />
+                    {errors.nombre && (
+                    <span className="error-message">{errors.nombre}</span>
+                    )}
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="apellido">Apellido</label>
+                    <input
+                    type="text"
+                    id="apellido"
+                    name="apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                    placeholder="Tu apellido"
+                    className={errors.apellido ? 'input-error' : ''}
+                    />
+                    {errors.apellido && (
+                    <span className="error-message">{errors.apellido}</span>
+                    )}
+                </div>
             </div>
 
             <div className="form-group">
@@ -182,19 +233,68 @@ import { alertError, alertSuccess } from '../../ui/alerts';
                 )}
             </div>
 
-            <div className="form-group">
-                <label htmlFor="tipoUsuario">Tipo de Usuario</label>
-                <select
-                id="tipoUsuario"
-                name="tipoUsuario"
-                value={formData.tipoUsuario}
-                onChange={handleChange}
-                >
-                <option value="emprendedor">Emprendedor</option>
-                <option value="inversionista">Inversionista</option>
-                <option value="mentor">Mentor</option>
-                <option value="estudiante">Estudiante</option>
-                </select>
+            <div className="form-row">
+                <div className="form-group">
+                    <label htmlFor="carrera">Carrera</label>
+                    <input
+                    type="text"
+                    id="carrera"
+                    name="carrera"
+                    value={formData.carrera}
+                    onChange={handleChange}
+                    placeholder="Tu carrera o programa"
+                    className={errors.carrera ? 'input-error' : ''}
+                    />
+                    {errors.carrera && (
+                    <span className="error-message">{errors.carrera}</span>
+                    )}
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="telefono">Teléfono</label>
+                    <input
+                    type="tel"
+                    id="telefono"
+                    name="telefono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    placeholder="3001234567"
+                    className={errors.telefono ? 'input-error' : ''}
+                    />
+                    {errors.telefono && (
+                    <span className="error-message">{errors.telefono}</span>
+                    )}
+                </div>
+            </div>
+
+            <div className="form-row">
+                <div className="form-group">
+                    <label htmlFor="fechaNacimiento">Fecha de Nacimiento</label>
+                    <input
+                    type="date"
+                    id="fechaNacimiento"
+                    name="fechaNacimiento"
+                    value={formData.fechaNacimiento}
+                    onChange={handleChange}
+                    className={errors.fechaNacimiento ? 'input-error' : ''}
+                    />
+                    {errors.fechaNacimiento && (
+                    <span className="error-message">{errors.fechaNacimiento}</span>
+                    )}
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="rol">Tipo de Usuario</label>
+                    <select
+                    id="rol"
+                    name="rol"
+                    value={formData.rol}
+                    onChange={handleChange}
+                    >
+                    <option value="estudiante">Estudiante</option>
+                    <option value="usuario_universidad">Usuario de la Universidad</option>
+                    </select>
+                </div>
             </div>
 
             <div className="form-group-checkbox">

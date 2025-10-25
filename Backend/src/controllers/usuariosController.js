@@ -52,11 +52,22 @@ const usuariosController = {
   // Crear usuario
   crear: async (req, res) => {
     try {
-      const { email, password, nombre, carrera, telefono, rol } = req.body;
+      const { 
+        email, 
+        password, 
+        nombre, 
+        apellido, 
+        carrera, 
+        telefono, 
+        fecha_nacimiento, 
+        rol 
+      } = req.body;
 
       // Validar campos requeridos
-      if (!email || !password || !nombre) {
-        return res.status(400).json({ error: 'Email, password y nombre son requeridos' });
+      if (!email || !password || !nombre || !apellido) {
+        return res.status(400).json({ 
+          error: 'Email, password, nombre y apellido son requeridos' 
+        });
       }
 
       // Verificar si el email ya existe
@@ -80,9 +91,13 @@ const usuariosController = {
             email,
             password: hashedPassword,
             nombre,
-            carrera,
-            telefono,
-            rol: rol || 'estudiante'
+            apellido,
+            carrera: carrera || null,
+            telefono: telefono || null,
+            fecha_nacimiento: fecha_nacimiento || null,
+            rol: rol || 'estudiante',
+            activo: true,
+            verificado: false
           }
         ])
         .select()
@@ -104,13 +119,24 @@ const usuariosController = {
   actualizar: async (req, res) => {
     try {
       const { id } = req.params;
-      const { nombre, carrera, telefono, email } = req.body;
+      const { 
+        nombre, 
+        apellido, 
+        carrera, 
+        telefono, 
+        email, 
+        fecha_nacimiento,
+        avatar_url 
+      } = req.body;
 
       const updateData = {};
       if (nombre) updateData.nombre = nombre;
+      if (apellido) updateData.apellido = apellido;
       if (carrera) updateData.carrera = carrera;
       if (telefono) updateData.telefono = telefono;
       if (email) updateData.email = email;
+      if (fecha_nacimiento) updateData.fecha_nacimiento = fecha_nacimiento;
+      if (avatar_url) updateData.avatar_url = avatar_url;
 
       const { data, error } = await supabase
         .from('usuarios')
