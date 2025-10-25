@@ -1,4 +1,4 @@
-const { query } = require('../db/mysql');
+const { supabase } = require('../db/mysql');
 
 function parsePagination(req) {
   const limit = Math.min(parseInt(req.query.limit || '50', 10), 100);
@@ -10,22 +10,43 @@ module.exports = {
   async list(req, res) {
     try {
       const { limit, offset } = parsePagination(req);
-      const rows = await query('SELECT * FROM contactos ORDER BY fecha DESC LIMIT ? OFFSET ?', [limit, offset]);
-      res.json({ ok: true, data: rows });
+      
+      const { data, error } = await supabase
+        .from('contactos')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw error;
+
+      res.json({ ok: true, data: data || [] });
     } catch (err) {
+      console.error('Error listando contactos:', err);
       res.status(500).json({ ok: false, error: err.message });
     }
   },
+
   async create(req, res) {
     try {
       const { nombre, email, telefono, asunto, mensaje } = req.body || {};
-      const result = await query(
-        'INSERT INTO contactos (nombre, email, telefono, asunto, mensaje) VALUES (?, ?, ?, ?, ?)',
-        [nombre || null, email || null, telefono || null, asunto || null, mensaje || null]
-      );
-      const rows = await query('SELECT * FROM contactos WHERE id = ?', [result.insertId]);
-      res.status(201).json({ ok: true, data: rows[0] });
+
+      const { data, error } = await supabase
+        .from('contactos')
+        .insert([{
+          nombre: nombre || null,
+          email: email || null,
+          telefono: telefono || null,
+          asunto: asunto || null,
+          mensaje: mensaje || null
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(201).json({ ok: true, data });
     } catch (err) {
+      console.error('Error creando contacto:', err);
       res.status(500).json({ ok: false, error: err.message });
     }
   },

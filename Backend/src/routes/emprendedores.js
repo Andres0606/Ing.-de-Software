@@ -1,13 +1,12 @@
 const express = require('express');
-const ctrl = require('../controllers/emprendedoresController');
 const router = express.Router();
+const emprendedoresController = require('../controllers/emprendedoresController');
 
-router.get('/', ctrl.list);
-// Rutas específicas antes de la genérica
-router.get('/usuario/:usuarioId', ctrl.listByUsuario);
-router.get('/:id', ctrl.getById);
-router.post('/', ctrl.create);
-router.put('/:id', ctrl.update);
-router.delete('/:id', ctrl.remove);
+router.get('/', emprendedoresController.list);
+router.get('/:id', emprendedoresController.getById);
+router.get('/usuario/:usuarioId', emprendedoresController.listByUsuario); // ✅ Esta es la importante
+router.post('/', emprendedoresController.create);
+router.put('/:id', emprendedoresController.update);
+router.delete('/:id', emprendedoresController.remove);
 
 module.exports = router;

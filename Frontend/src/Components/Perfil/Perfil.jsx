@@ -6,13 +6,22 @@ import {
   Pencil, Lock
 } from 'lucide-react';
 import '../../CSS/Perfil/Perfil.css';
-import { apiClient } from '../../api/client'; // ❌ ANTES: { api }
-                                               // ✅ AHORA: { apiClient }
+import { apiClient } from '../../api/client';
 import { alertError, alertSuccess } from '../../ui/alerts';
 
 export default function Perfil() {
   const storedUser = useMemo(() => {
-    try { return JSON.parse(sessionStorage.getItem('user') || 'null'); } catch { return null; }
+    try { 
+      const data = JSON.parse(sessionStorage.getItem('user') || 'null');
+      console.log('💾 Datos desde sessionStorage:', data);
+      
+      // ✅ CORREGIDO: Si tiene la estructura {mensaje, usuario}, extraer solo usuario
+      const user = data?.usuario || data;
+      console.log('👤 Usuario extraído:', user);
+      return user;
+    } catch { 
+      return null; 
+    }
   }, []);
 
   const [user, setUser] = useState(storedUser);
@@ -39,15 +48,24 @@ export default function Perfil() {
   useEffect(() => {
     async function load() {
       try {
-        if (!storedUser?.id) return;
-        console.log('Usuario almacenado:', storedUser);
-        const u = await apiClient.get(`/usuarios/${storedUser.id}`); // ✅ Cambiado
-        console.log('Usuario desde API:', u.data || u);
-        setUser(u.data || u);
-        const e = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`); // ✅ Cambiado
-        setEmprendimientos(e.data || e || []);
+        if (!storedUser?.id) {
+          console.log('⚠️ No hay usuario en sessionStorage');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('🔍 Cargando datos del usuario ID:', storedUser.id);
+        
+        // ✅ CORREGIDO: apiClient.get() ya devuelve directamente el JSON, no tiene .data
+        const userData = await apiClient.get(`/usuarios/${storedUser.id}`);
+        console.log('📡 Usuario recibido:', userData);
+        setUser(userData);
+        
+        const emprendimientosData = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`);
+        console.log('📡 Emprendimientos recibidos:', emprendimientosData);
+        setEmprendimientos(Array.isArray(emprendimientosData) ? emprendimientosData : []);
       } catch (err) {
-        console.error('Error cargando perfil:', err);
+        console.error('❌ Error cargando perfil:', err);
         alertError('Error cargando perfil', err.message);
       } finally {
         setLoading(false);
@@ -60,8 +78,8 @@ export default function Perfil() {
     setLoading(true);
     try {
       if (!storedUser?.id) return;
-      const e = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`); // ✅ Cambiado
-      setEmprendimientos(e.data || e || []);
+      const emprendimientosData = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`);
+      setEmprendimientos(Array.isArray(emprendimientosData) ? emprendimientosData : []);
     } catch (err) {
       alertError('No se pudo actualizar', err.message);
     } finally {
@@ -115,15 +133,15 @@ export default function Perfil() {
     if (!validateEdit()) return;
     setEditSaving(true);
     try {
-      const res = await apiClient.put(`/usuarios/${user.id}`, { // ✅ Cambiado
+      const updatedUser = await apiClient.put(`/usuarios/${user.id}`, {
         nombre: editForm.nombre,
         apellido: editForm.apellido,
         email: editForm.email,
         telefono: editForm.telefono || null,
         carrera: editForm.carrera || null,
-      }).catch(() => ({ data: { ...user, ...editForm } }));
+      });
 
-      const newUser = res?.data || res || { ...user, ...editForm };
+      const newUser = updatedUser || { ...user, ...editForm };
       setUser(newUser);
       sessionStorage.setItem('user', JSON.stringify(newUser));
       alertSuccess('Perfil actualizado', 'Tus datos fueron actualizados.');
@@ -152,7 +170,7 @@ export default function Perfil() {
     e.preventDefault();
     if (!user?.id || !validatePwd()) return;
     try {
-      await apiClient.post(`/usuarios/${user.id}/change-password`, { // ✅ Cambiado
+      await apiClient.post(`/usuarios/${user.id}/change-password`, {
         currentPassword: pwdForm.currentPassword,
         newPassword: pwdForm.newPassword,
       });
@@ -182,7 +200,7 @@ export default function Perfil() {
     setSaving(true);
     try {
       if (!validate()) return alertError('Campos incompletos', 'Revisa los datos.');
-      const res = await apiClient.post('/emprendedores', { // ✅ Cambiado
+      const newEmprendimiento = await apiClient.post('/emprendedores', {
         usuario_id: user.id,
         descripcion: form.descripcion,
         ubicacion: form.ubicacion,
@@ -190,7 +208,7 @@ export default function Perfil() {
         imagen: form.imagen,
         calificacion: 0,
       });
-      setEmprendimientos((prev) => [res.data || res, ...prev]);
+      setEmprendimientos((prev) => [newEmprendimiento, ...prev]);
       alertSuccess('Emprendimiento creado', 'Tu emprendimiento fue registrado.');
       handleCloseModal();
     } catch (err) {
@@ -303,6 +321,76 @@ export default function Perfil() {
           </div>
         )}
 
+        {/* Modal de Creación de Emprendimiento */}
+        {showModal && (
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Crear Emprendimiento</h3>
+                <button className="icon-btn" onClick={handleCloseModal}><X size={20} /></button>
+              </div>
+              <form onSubmit={handleCreate} className="modal-body">
+                <div className="form-row">
+                  <label>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={form.descripcion}
+                    onChange={handleChange}
+                    className={errors.descripcion ? 'input-error' : ''}
+                    placeholder="Describe tu emprendimiento"
+                    rows={3}
+                  />
+                  {errors.descripcion && <span className="error-text">{errors.descripcion}</span>}
+                </div>
+
+                <div className="form-row">
+                  <label>Ubicación</label>
+                  <input
+                    type="text"
+                    name="ubicacion"
+                    value={form.ubicacion}
+                    onChange={handleChange}
+                    placeholder="Ciudad, país"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <label>Categoría</label>
+                  <input
+                    type="text"
+                    name="categoria"
+                    value={form.categoria}
+                    onChange={handleChange}
+                    className={errors.categoria ? 'input-error' : ''}
+                    placeholder="Tecnología, Arte, etc."
+                  />
+                  {errors.categoria && <span className="error-text">{errors.categoria}</span>}
+                </div>
+
+                <div className="form-row">
+                  <label>Imagen (URL)</label>
+                  <input
+                    type="text"
+                    name="imagen"
+                    value={form.imagen}
+                    onChange={handleChange}
+                    className={errors.imagen ? 'input-error' : ''}
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                  {errors.imagen && <span className="error-text">{errors.imagen}</span>}
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="btn-outline" onClick={handleCloseModal}>Cancelar</button>
+                  <button type="submit" className="btn-primary" disabled={saving}>
+                    {saving ? 'Creando...' : 'Crear Emprendimiento'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Modal de Edición de Perfil */}
         {showEdit && (
           <div className="modal-overlay" onClick={closeEdit}>
@@ -395,7 +483,7 @@ export default function Perfil() {
                 <button className="icon-btn" onClick={closePwd}><X size={20} /></button>
               </div>
               <form onSubmit={handleChangePassword} className="modal-body">
-                <div className="form-row">
+              <div className="form-row">
                   <label>Contraseña Actual</label>
                   <input
                     type="password"

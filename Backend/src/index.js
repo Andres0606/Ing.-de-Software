@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const env = require('./config/env');
-const { query } = require('./db/mysql');
+const { supabase } = require('./db/mysql');
 
 const app = express();
 app.use(cors());
@@ -22,8 +22,14 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/db-ping', async (req, res) => {
   try {
-    const rows = await query('SELECT NOW() as now');
-    res.json({ ok: true, now: rows[0].now || rows[0].NOW || rows[0]['NOW()'] });
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id')
+      .limit(1);
+    
+    if (error) throw error;
+    
+    res.json({ ok: true, timestamp: new Date().toISOString() });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
