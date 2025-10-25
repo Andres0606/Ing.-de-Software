@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
-import Header from '../Header';
-import Footer from '../Footer';
-import '../../CSS/Inicio/Contacto.css';
+import Header from '../Header.jsx';
+import Footer from '../Footer.jsx';
+import '../../CSS/Inicio/Contacto.css'; // ❌ ANTES: '../../CSS./Inicio/Contacto.css'
+                                         // ✅ AHORA: '../../CSS/Inicio/Contacto.css'
 
 export default function Contacto() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -196,7 +197,7 @@ export default function Contacto() {
 
               <div className="contacto-faq-item">
                 <h4>¿Cuál es la comisión por venta?</h4>
-                <p>Cobramoa una comisión del 10% en cada venta realizada a través de la plataforma. Este porcentaje nos ayuda a mantener el servicio.</p>
+                <p>Cobramos una comisión del 10% en cada venta realizada a través de la plataforma. Este porcentaje nos ayuda a mantener el servicio.</p>
               </div>
 
               <div className="contacto-faq-item">
@@ -215,7 +216,7 @@ export default function Contacto() {
               </div>
 
               <div className="contacto-faq-item">
-                <h4>¿Cómo reporte un problema con un producto?</h4>
+                <h4>¿Cómo reporto un problema con un producto?</h4> {/* Typo corregido */}
                 <p>Puedes reportar problemas directamente desde tu panel de comprador. Nuestro equipo investigará y resolverá el conflicto.</p>
               </div>
             </div>

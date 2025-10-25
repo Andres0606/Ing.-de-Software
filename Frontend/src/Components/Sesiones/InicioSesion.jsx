@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/InicioSesion.css';
-import { api, API_BASE_URL } from '../../api/client';
+import { apiClient } from '../../api/client'; // ❌ ANTES: { api, API_BASE_URL }
+                                               // ✅ AHORA: { apiClient }
 import { alertError, alertSuccess } from '../../ui/alerts';
 
 const InicioSesion = () => {
@@ -36,10 +37,13 @@ const InicioSesion = () => {
         setError('');
         setLoading(true);
         try {
-            const res = await api('/api/usuarios/login', {
-                method: 'POST',
-                body: JSON.stringify({ email: formData.email, password: formData.password })
+            const res = await apiClient.post('/usuarios/login', { // ✅ Cambiado
+                email: formData.email, 
+                password: formData.password 
             });
+            
+            const userData = res.data || res;
+            
             // Guardar preferencia de recordar
             if (formData.remember) {
                 localStorage.setItem('remember_login', '1');
@@ -48,9 +52,11 @@ const InicioSesion = () => {
                 localStorage.removeItem('remember_login');
                 localStorage.removeItem('remember_email');
             }
-            // Guardar usuario en sessionStorage (simple)
-            sessionStorage.setItem('user', JSON.stringify(res.data));
-            await alertSuccess('¡Bienvenido/a!', `Hola ${res.data.nombre}`);
+            
+            // Guardar usuario en sessionStorage
+            sessionStorage.setItem('user', JSON.stringify(userData));
+            await alertSuccess('¡Bienvenido/a!', `Hola ${userData.nombre}`);
+            
             // Redirigir al inicio
             window.location.href = '/';
         } catch (err) {
@@ -62,9 +68,10 @@ const InicioSesion = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        const base = API_BASE_URL || '';
+        // Obtener la URL base del backend desde las variables de entorno
+        const API_BASE_URL = import.meta.env.VITE_API_URL.replace('/api', ''); // ✅ Agregado
         const path = `/api/auth/${provider.toLowerCase()}/start`;
-        const url = base ? `${base}${path}` : path;
+        const url = `${API_BASE_URL}${path}`;
         window.location.href = url;
     };
 

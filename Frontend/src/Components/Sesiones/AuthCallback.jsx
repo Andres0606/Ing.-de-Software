@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { alertError, alertSuccess } from '../../ui/alerts';
+import { alertError, alertSuccess } from '../../ui/alerts.js';
 
 const AuthCallback = () => {
   const navigate = useNavigate();

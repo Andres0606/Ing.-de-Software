@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Home, Users, ShoppingBag, Calendar, Mail, Search, Plus, LogOut, User } from 'lucide-react';
 import Footer from '../Footer.jsx';
+import Header from '../Header.jsx';
 import '../../CSS/Inicio/EmprendedoresUCC.css';
-import '../../CSS/Header.css';
 
 export default function EmprendedoresUCC() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!sessionStorage.getItem('user'));
@@ -35,6 +35,7 @@ export default function EmprendedoresUCC() {
 
   return (
     <div className="emprende-container">
+      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       {/* Header Fijo */}
       <header className="emprende-header">
         <div className="emprende-header-content">

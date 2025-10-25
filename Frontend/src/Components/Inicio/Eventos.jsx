@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, Users, Search, Filter, ChevronRight, X } from 'lucide-react';
-import Header from '../Header';
-import Footer from '../Footer';
+import Footer from '../Footer.jsx';
+import Header from '../Header.jsx';
 import '../../CSS/Inicio/Eventos.css';
 
 export default function EventosUCC() {

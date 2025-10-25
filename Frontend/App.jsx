@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
+// Como App.jsx está en la RAÍZ de Frontend/, las rutas son ./src/Components/
 import EmprenderUCC from './src/Components/Inicio/EmprendedoresUCC.jsx';
 import Emprendedores from './src/Components/Inicio/Emprendedores.jsx';
 import Productos from './src/Components/Inicio/Productos.jsx';
@@ -23,8 +24,8 @@ function App() {
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/login" element={<InicioSesion />} />
         <Route path="/registro" element={<Registro />} />
-    <Route path="/auth/callback" element={<AuthCallback />} />
-  <Route path="/perfil" element={<Perfil />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/perfil" element={<Perfil />} />
         <Route path="*" element={<EmprenderUCC />} />
       </Routes>
     </BrowserRouter>

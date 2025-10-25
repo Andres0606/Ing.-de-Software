@@ -1,17 +1,15 @@
 const express = require('express');
-const ctrl = require('../controllers/usuariosController');
 const router = express.Router();
+const usuariosController = require('../controllers/usuariosController');
 
-// Auth
-router.post('/login', ctrl.login);
-router.post('/password-reset', ctrl.passwordReset);
-router.post('/password-reset/confirm', ctrl.passwordResetConfirm);
-router.post('/:id/change-password', ctrl.changePassword);
+// Rutas de usuarios
+router.get('/', usuariosController.obtenerTodos);
+router.get('/:id', usuariosController.obtenerPorId);
+router.post('/', usuariosController.crear);
+router.put('/:id', usuariosController.actualizar);
+router.delete('/:id', usuariosController.eliminar);
 
-router.get('/', ctrl.list);
-router.get('/:id', ctrl.getById);
-router.post('/', ctrl.create);
-router.put('/:id', ctrl.update);
-router.delete('/:id', ctrl.remove);
+// Ruta de login
+router.post('/login', usuariosController.login);
 
 module.exports = router;

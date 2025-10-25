@@ -6,7 +6,8 @@ import {
   Pencil, Lock
 } from 'lucide-react';
 import '../../CSS/Perfil/Perfil.css';
-import { api } from '../../api/client';
+import { apiClient } from '../../api/client'; // ❌ ANTES: { api }
+                                               // ✅ AHORA: { apiClient }
 import { alertError, alertSuccess } from '../../ui/alerts';
 
 export default function Perfil() {
@@ -33,10 +34,10 @@ export default function Perfil() {
     async function load() {
       try {
         if (!storedUser?.id) return;
-        const u = await api(`/api/usuarios/${storedUser.id}`);
-        setUser(u.data);
-        const e = await api(`/api/emprendedores/usuario/${storedUser.id}`);
-        setEmprendimientos(e.data || []);
+        const u = await apiClient.get(`/usuarios/${storedUser.id}`); // ✅ Cambiado
+        setUser(u.data || u);
+        const e = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`); // ✅ Cambiado
+        setEmprendimientos(e.data || e || []);
       } catch (err) {
         alertError('Error cargando perfil', err.message);
       } finally {
@@ -50,8 +51,8 @@ export default function Perfil() {
     setLoading(true);
     try {
       if (!storedUser?.id) return;
-      const e = await api(`/api/emprendedores/usuario/${storedUser.id}`);
-      setEmprendimientos(e.data || []);
+      const e = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`); // ✅ Cambiado
+      setEmprendimientos(e.data || e || []);
     } catch (err) {
       alertError('No se pudo actualizar', err.message);
     } finally {
@@ -97,15 +98,12 @@ export default function Perfil() {
     if (!validateEdit()) return;
     setEditSaving(true);
     try {
-      const res = await api(`/api/usuarios/${user.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          email: editForm.email,
-          telefono: editForm.telefono || null,
-        }),
+      const res = await apiClient.put(`/usuarios/${user.id}`, { // ✅ Cambiado
+        email: editForm.email,
+        telefono: editForm.telefono || null,
       }).catch(() => ({ data: { ...user, ...editForm } }));
 
-      const newUser = res?.data || { ...user, ...editForm };
+      const newUser = res?.data || res || { ...user, ...editForm };
       setUser(newUser);
       sessionStorage.setItem('user', JSON.stringify(newUser));
       alertSuccess('Perfil actualizado', 'Tus datos fueron actualizados.');
@@ -134,12 +132,9 @@ export default function Perfil() {
     e.preventDefault();
     if (!user?.id || !validatePwd()) return;
     try {
-      await api(`/api/usuarios/${user.id}/change-password`, {
-        method: 'POST',
-        body: JSON.stringify({
-          currentPassword: pwdForm.currentPassword,
-          newPassword: pwdForm.newPassword,
-        }),
+      await apiClient.post(`/usuarios/${user.id}/change-password`, { // ✅ Cambiado
+        currentPassword: pwdForm.currentPassword,
+        newPassword: pwdForm.newPassword,
       });
       alertSuccess('Listo', 'Tu contraseña fue actualizada.');
       closePwd();
@@ -167,18 +162,15 @@ export default function Perfil() {
     setSaving(true);
     try {
       if (!validate()) return alertError('Campos incompletos', 'Revisa los datos.');
-      const res = await api('/api/emprendedores', {
-        method: 'POST',
-        body: JSON.stringify({
-          usuario_id: user.id,
-          descripcion: form.descripcion,
-          ubicacion: form.ubicacion,
-          categoria: form.categoria,
-          imagen: form.imagen,
-          calificacion: 0,
-        }),
+      const res = await apiClient.post('/emprendedores', { // ✅ Cambiado
+        usuario_id: user.id,
+        descripcion: form.descripcion,
+        ubicacion: form.ubicacion,
+        categoria: form.categoria,
+        imagen: form.imagen,
+        calificacion: 0,
       });
-      setEmprendimientos((prev) => [res.data, ...prev]);
+      setEmprendimientos((prev) => [res.data || res, ...prev]);
       alertSuccess('Emprendimiento creado', 'Tu emprendimiento fue registrado.');
       handleCloseModal();
     } catch (err) {

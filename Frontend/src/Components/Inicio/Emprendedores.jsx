@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Search, MapPin, Mail, Globe, Star, Filter, X } from 'lucide-react';
-import Header from '../Header';
-import Footer from '../Footer';
+import Header from '../Header.jsx';
+import Footer from '../Footer.jsx';
 import '../../CSS/Inicio/Emprendedores.css';
-import { api } from '../../api/client.js';
+import { apiClient } from '../../api/client.js'; // ❌ ANTES: { api }
+                                                  // ✅ AHORA: { apiClient }
 
 export default function Emprendedores() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,10 +28,12 @@ export default function Emprendedores() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    api('/api/emprendedores')
+    apiClient.get('/emprendedores') // ❌ ANTES: api('/api/emprendedores')
+                                     // ✅ AHORA: apiClient.get('/emprendedores')
+                                     // Nota: /api/ ya está en VITE_API_URL
       .then((res) => {
         if (!mounted) return;
-        const data = Array.isArray(res?.data) ? res.data : [];
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
         // Mapear mínimos esperados por la UI
         const mapped = data.map((e) => ({
           id: e.id,

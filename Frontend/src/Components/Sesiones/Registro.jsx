@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../../CSS/Sesiones/Registro.css';
-import { api, API_BASE_URL } from '../../api/client';
+import { apiClient } from '../../api/client'; // ❌ ANTES: { api, API_BASE_URL }
+                                               // ✅ AHORA: { apiClient }
 import { alertError, alertSuccess } from '../../ui/alerts';
 
     const Registro = () => {
@@ -79,11 +80,9 @@ import { alertError, alertSuccess } from '../../ui/alerts';
                 password: formData.password,
                 tipo_usuario: formData.tipoUsuario,
             };
-            const res = await api('/api/usuarios', {
-                method: 'POST',
-                body: JSON.stringify(payload),
-            });
-            await alertSuccess('Cuenta creada', `Bienvenido/a ${res.data.nombre}`);
+            const res = await apiClient.post('/usuarios', payload); // ✅ Cambiado
+            const userData = res.data || res;
+            await alertSuccess('Cuenta creada', `Bienvenido/a ${userData.nombre}`);
             navigate('/login', { replace: true });
         } catch (err) {
             const msg = err.message || 'Error al registrar';
@@ -97,9 +96,10 @@ import { alertError, alertSuccess } from '../../ui/alerts';
     };
 
     const handleSocialRegister = (provider) => {
-        const base = API_BASE_URL || '';
+        // Obtener la URL base del backend desde las variables de entorno
+        const API_BASE_URL = import.meta.env.VITE_API_URL.replace('/api', ''); // ✅ Agregado
         const path = `/api/auth/${provider.toLowerCase()}/start`;
-        const url = base ? `${base}${path}` : path;
+        const url = `${API_BASE_URL}${path}`;
         window.location.href = url;
     };
 
