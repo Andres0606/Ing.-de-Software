@@ -284,16 +284,17 @@ import { alertError, alertSuccess } from '../../ui/alerts';
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="rol">Tipo de Usuario</label>
-                    <select
+                <label htmlFor="rol">Tipo de Usuario</label>
+                <select
                     id="rol"
                     name="rol"
                     value={formData.rol}
                     onChange={handleChange}
-                    >
-                    <option value="emprendedor">Emprendedor</option>
-                    <option value="usuario_universidad">Usuario de la Universidad</option>
-                    </select>
+                >
+                    <option value="">Selecciona un rol</option>
+                    <option value="Emprendedor">Emprendedor</option>
+                    <option value="Usuario de la universidad">Usuario de la universidad</option>
+                </select>
                 </div>
             </div>
 
