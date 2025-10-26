@@ -15,7 +15,6 @@ const InicioSesion = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // precargar email si "Recordarme" estaba activo
         const remembered = localStorage.getItem('remember_login');
         const savedEmail = localStorage.getItem('remember_email');
         if (remembered === '1' && savedEmail) {
@@ -41,13 +40,11 @@ const InicioSesion = () => {
                 password: formData.password 
             });
             
-            console.log('📡 Respuesta completa del login:', res);
-            
-            // ✅ CORREGIDO: Extraer el usuario correctamente
-            // Si la respuesta tiene estructura {mensaje, usuario}, extraer solo usuario
+            console.log(' Respuesta completa del login:', res);
+
             const userData = res?.usuario || res?.data?.usuario || res?.data || res;
             
-            console.log('✅ userData que se guardará:', userData);
+            console.log('userData que se guardará:', userData);
             
             // Guardar preferencia de recordar
             if (formData.remember) {

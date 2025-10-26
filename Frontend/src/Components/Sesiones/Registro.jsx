@@ -291,7 +291,7 @@ import { alertError, alertSuccess } from '../../ui/alerts';
                     value={formData.rol}
                     onChange={handleChange}
                     >
-                    <option value="estudiante">Estudiante</option>
+                    <option value="emprendedor">Emprendedor</option>
                     <option value="usuario_universidad">Usuario de la Universidad</option>
                     </select>
                 </div>
