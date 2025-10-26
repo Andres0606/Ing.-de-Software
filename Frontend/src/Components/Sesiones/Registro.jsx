@@ -16,7 +16,7 @@ import { alertError, alertSuccess } from '../../ui/alerts';
         carrera: '',
         telefono: '',
         fechaNacimiento: '',
-        rol: 'estudiante', // 'estudiante', 'administrador', 'usuario_universidad'
+        rol: '', // 'estudiante', 'administrador', 'usuario_universidad'
         aceptaTerminos: false
     });
 
