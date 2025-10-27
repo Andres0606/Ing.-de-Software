@@ -156,7 +156,7 @@ const usuariosController = {
     }
   },
 
-  // Actualizar usuario
+  // Actualizar usuario (VERSIÓN DEBUG MEJORADA)
   actualizar: async (req, res) => {
     try {
       const { id } = req.params;
@@ -171,23 +171,35 @@ const usuariosController = {
       } = req.body;
 
       console.log('🔍 Actualizando usuario ID:', id);
+      console.log('🔍 Tipo de ID:', typeof id);
       console.log('📦 Datos recibidos:', req.body);
 
-      // ✅ PRIMERO: Verificar que el usuario existe
+      // ✅ PASO 1: Verificar que existe
       const { data: usuarioExistente, error: errorBusqueda } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (errorBusqueda || !usuarioExistente) {
-        console.error('❌ Usuario no encontrado:', id);
+      console.log('🔍 Usuario existente encontrado:', usuarioExistente ? 'SÍ' : 'NO');
+      console.log('🔍 Error de búsqueda:', errorBusqueda);
+
+      if (errorBusqueda) {
+        console.error('❌ Error al buscar usuario:', errorBusqueda);
+        return res.status(500).json({ 
+          error: 'Error al buscar usuario',
+          details: errorBusqueda.message 
+        });
+      }
+
+      if (!usuarioExistente) {
+        console.error('❌ Usuario no encontrado con ID:', id);
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
       console.log('✅ Usuario encontrado:', usuarioExistente.email);
 
-      // ✅ SEGUNDO: Construir objeto de actualización (solo campos que vienen)
+      // ✅ PASO 2: Construir objeto de actualización
       const updateData = {};
       if (nombre !== undefined) updateData.nombre = nombre;
       if (apellido !== undefined) updateData.apellido = apellido;
@@ -199,25 +211,43 @@ const usuariosController = {
 
       console.log('📝 Campos a actualizar:', updateData);
 
-      // ✅ TERCERO: Actualizar sin usar .single() primero
-      const { data, error } = await supabase
+      // 🔥 PASO 3: Intentar actualizar CON LOGS DETALLADOS
+      console.log('⏳ Ejecutando UPDATE en Supabase...');
+      
+      const { data: resultado, error: errorUpdate, count } = await supabase
         .from('usuarios')
         .update(updateData)
         .eq('id', id)
         .select();
 
-      if (error) {
-        console.error('❌ Error de Supabase al actualizar:', error);
-        throw error;
+      console.log('🔍 Resultado del UPDATE:', resultado);
+      console.log('🔍 Error del UPDATE:', errorUpdate);
+      console.log('🔍 Count:', count);
+      console.log('🔍 Resultado es array:', Array.isArray(resultado));
+      console.log('🔍 Longitud del resultado:', resultado?.length);
+
+      if (errorUpdate) {
+        console.error('❌ Error de Supabase al actualizar:', errorUpdate);
+        return res.status(500).json({ 
+          error: 'Error al actualizar usuario',
+          details: errorUpdate.message 
+        });
       }
 
-      // ✅ CUARTO: Validar que se actualizó
-      if (!data || data.length === 0) {
+      if (!resultado || resultado.length === 0) {
         console.error('❌ No se actualizó ningún registro');
-        return res.status(404).json({ error: 'No se pudo actualizar el usuario' });
+        console.error('❌ Esto puede ser por:');
+        console.error('   1. Políticas RLS de Supabase bloqueando el UPDATE');
+        console.error('   2. El ID no coincide exactamente');
+        console.error('   3. Triggers en la BD que cancelan el UPDATE');
+        
+        return res.status(500).json({ 
+          error: 'No se pudo actualizar el usuario',
+          hint: 'Verifica las políticas RLS en Supabase'
+        });
       }
 
-      const usuarioActualizado = data[0];
+      const usuarioActualizado = resultado[0];
       console.log('✅ Usuario actualizado correctamente:', usuarioActualizado.email);
 
       // Remover contraseña
@@ -295,7 +325,7 @@ const usuariosController = {
     }
   },
 
-  // ✅ NUEVO: Cambiar contraseña
+  // ✅ Cambiar contraseña
   cambiarPassword: async (req, res) => {
     try {
       const { id } = req.params;
