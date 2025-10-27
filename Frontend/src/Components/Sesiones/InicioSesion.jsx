@@ -40,11 +40,36 @@ const InicioSesion = () => {
                 password: formData.password 
             });
             
-            console.log(' Respuesta completa del login:', res);
+            console.log('🔍 Respuesta COMPLETA del backend:', res);
+            console.log('🔍 Tipo de respuesta:', typeof res);
+            console.log('🔍 Claves de la respuesta:', Object.keys(res || {}));
 
-            const userData = res?.usuario || res?.data?.usuario || res?.data || res;
+            // ✅ CORREGIDO: Extraer usuario correctamente
+            let userData;
+            if (res?.usuario) {
+                // Caso: { mensaje: "...", usuario: {...} }
+                userData = res.usuario;
+                console.log('✅ Usuario extraído de res.usuario');
+            } else if (res?.data?.usuario) {
+                // Caso: { data: { mensaje: "...", usuario: {...} } }
+                userData = res.data.usuario;
+                console.log('✅ Usuario extraído de res.data.usuario');
+            } else if (res?.data) {
+                // Caso: { data: {...} }
+                userData = res.data;
+                console.log('✅ Usuario extraído de res.data');
+            } else {
+                // Caso: {...} directamente
+                userData = res;
+                console.log('✅ Usuario es res directamente');
+            }
             
-            console.log('userData que se guardará:', userData);
+            console.log('👤 USUARIO FINAL que se guardará:', userData);
+            console.log('🎯 ROL del usuario:', userData?.rol);
+            
+            if (!userData || !userData.id) {
+                throw new Error('Respuesta del servidor inválida');
+            }
             
             // Guardar preferencia de recordar
             if (formData.remember) {
@@ -55,8 +80,9 @@ const InicioSesion = () => {
                 localStorage.removeItem('remember_email');
             }
             
-            // ✅ CORREGIDO: Guardar solo el objeto usuario en sessionStorage
+            // ✅ GUARDAR EN SESSIONSTORAGE
             sessionStorage.setItem('user', JSON.stringify(userData));
+            console.log('💾 Guardado en sessionStorage:', sessionStorage.getItem('user'));
             
             await alertSuccess('¡Bienvenido/a!', `Hola ${userData.nombre || 'Usuario'}`);
             
@@ -72,7 +98,6 @@ const InicioSesion = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        // Obtener la URL base del backend desde las variables de entorno
         const API_BASE_URL = import.meta.env.VITE_API_URL.replace('/api', '');
         const path = `/api/auth/${provider.toLowerCase()}/start`;
         const url = `${API_BASE_URL}${path}`;
