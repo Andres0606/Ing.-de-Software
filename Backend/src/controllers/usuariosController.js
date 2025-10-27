@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs'); // ⚠️ Cambiado de 'bcrypt' a 'bcryptjs'
+const bcrypt = require('bcryptjs');
 const { supabase } = require('../db/mysql');
 
 const usuariosController = {
@@ -63,12 +63,26 @@ const usuariosController = {
         rol 
       } = req.body;
 
+      console.log('🔍 Datos recibidos en backend:', { 
+        email, 
+        nombre, 
+        apellido, 
+        rol,
+        tipo_rol: typeof rol 
+      });
+
       // Validar campos requeridos
       if (!email || !password || !nombre || !apellido) {
         return res.status(400).json({ 
           error: 'Email, password, nombre y apellido son requeridos' 
         });
       }
+
+      // ✅ VALIDACIÓN DE ROL MEJORADA
+      const rolesValidos = ['Emprendedor', 'Administrador', 'Usuario de la universidad'];
+      const rolFinal = rol && rolesValidos.includes(rol) ? rol : 'Usuario de la universidad';
+      
+      console.log('✅ Rol que se guardará:', rolFinal);
 
       // Verificar si el email ya existe
       const { data: existente } = await supabase
@@ -84,6 +98,7 @@ const usuariosController = {
       // Encriptar contraseña
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // ✅ CORREGIDO: Usar rolFinal en lugar de rol || 'estudiante'
       const { data, error } = await supabase
         .from('usuarios')
         .insert([
@@ -95,7 +110,7 @@ const usuariosController = {
             carrera: carrera || null,
             telefono: telefono || null,
             fecha_nacimiento: fecha_nacimiento || null,
-            rol: rol || 'estudiante',
+            rol: rolFinal, // ✅ CORREGIDO
             activo: true,
             verificado: false
           }
@@ -103,7 +118,12 @@ const usuariosController = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error de Supabase:', error);
+        throw error;
+      }
+
+      console.log('✅ Usuario creado en BD:', data);
 
       // Remover contraseña
       const { password: _, ...usuarioSinPassword } = data;
@@ -216,6 +236,54 @@ const usuariosController = {
     } catch (error) {
       console.error('Error en login:', error);
       res.status(500).json({ error: 'Error en el servidor' });
+    }
+  },
+
+  // ✅ NUEVO: Cambiar contraseña
+  cambiarPassword: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ 
+          error: 'Contraseña actual y nueva son requeridas' 
+        });
+      }
+
+      // Buscar usuario
+      const { data: usuario, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Verificar contraseña actual
+      const passwordValido = await bcrypt.compare(currentPassword, usuario.password);
+
+      if (!passwordValido) {
+        return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+      }
+
+      // Encriptar nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Actualizar contraseña
+      const { error: updateError } = await supabase
+        .from('usuarios')
+        .update({ password: hashedPassword })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      res.json({ mensaje: 'Contraseña actualizada correctamente' });
+    } catch (error) {
+      console.error('Error al cambiar contraseña:', error);
+      res.status(500).json({ error: 'Error al cambiar contraseña' });
     }
   }
 };
