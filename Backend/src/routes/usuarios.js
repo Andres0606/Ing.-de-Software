@@ -12,4 +12,7 @@ router.delete('/:id', usuariosController.eliminar);
 // Ruta de login
 router.post('/login', usuariosController.login);
 
+// ✅ NUEVA: Ruta para cambiar contraseña
+router.post('/:id/change-password', usuariosController.cambiarPassword);
+
 module.exports = router;

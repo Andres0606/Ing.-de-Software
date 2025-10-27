@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, X, RefreshCw, MapPin, Tag,
-  Image as ImageIcon, Mail, Phone, KeyRound,
   Pencil, Lock
 } from 'lucide-react';
 import '../../CSS/Perfil/Perfil.css';
@@ -13,11 +12,7 @@ export default function Perfil() {
   const storedUser = useMemo(() => {
     try { 
       const data = JSON.parse(sessionStorage.getItem('user') || 'null');
-      console.log('💾 Datos desde sessionStorage:', data);
-      
-      // ✅ CORREGIDO: Si tiene la estructura {mensaje, usuario}, extraer solo usuario
       const user = data?.usuario || data;
-      console.log('👤 Usuario extraído:', user);
       return user;
     } catch { 
       return null; 
@@ -49,20 +44,14 @@ export default function Perfil() {
     async function load() {
       try {
         if (!storedUser?.id) {
-          console.log('⚠️ No hay usuario en sessionStorage');
           setLoading(false);
           return;
         }
         
-        console.log('🔍 Cargando datos del usuario ID:', storedUser.id);
-        
-        // ✅ CORREGIDO: apiClient.get() ya devuelve directamente el JSON, no tiene .data
         const userData = await apiClient.get(`/usuarios/${storedUser.id}`);
-        console.log('📡 Usuario recibido:', userData);
         setUser(userData);
         
         const emprendimientosData = await apiClient.get(`/emprendedores/usuario/${storedUser.id}`);
-        console.log('📡 Emprendimientos recibidos:', emprendimientosData);
         setEmprendimientos(Array.isArray(emprendimientosData) ? emprendimientosData : []);
       } catch (err) {
         console.error('❌ Error cargando perfil:', err);
@@ -110,7 +99,9 @@ export default function Perfil() {
     setEditErrors({});
     setShowEdit(true);
   };
+  
   const closeEdit = () => setShowEdit(false);
+  
   const onEditChange = (e) => {
     const { name, value } = e.target;
     setEditForm((p) => ({ ...p, [name]: value }));
@@ -131,8 +122,12 @@ export default function Perfil() {
     e.preventDefault();
     if (!user?.id) return;
     if (!validateEdit()) return;
+    
     setEditSaving(true);
     try {
+      console.log('📤 Actualizando perfil del usuario:', user.id);
+      console.log('📤 Datos a enviar:', editForm);
+      
       const updatedUser = await apiClient.put(`/usuarios/${user.id}`, {
         nombre: editForm.nombre,
         apellido: editForm.apellido,
@@ -141,19 +136,31 @@ export default function Perfil() {
         carrera: editForm.carrera || null,
       });
 
+      console.log('✅ Usuario actualizado recibido:', updatedUser);
+
+      // Actualizar el estado local
       const newUser = updatedUser || { ...user, ...editForm };
       setUser(newUser);
+      
+      // Actualizar sessionStorage
       sessionStorage.setItem('user', JSON.stringify(newUser));
-      alertSuccess('Perfil actualizado', 'Tus datos fueron actualizados.');
+      
+      alertSuccess('Perfil actualizado', 'Tus datos fueron actualizados correctamente.');
       closeEdit();
     } catch (err) {
+      console.error('❌ Error al actualizar perfil:', err);
       alertError('No se pudo actualizar', err.message);
     } finally {
       setEditSaving(false);
     }
   };
 
-  const openPwd = () => { setPwdForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setShowPwd(true); };
+  const openPwd = () => { 
+    setPwdForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); 
+    setPwdErrors({});
+    setShowPwd(true); 
+  };
+  
   const closePwd = () => setShowPwd(false);
 
   const validatePwd = () => {
@@ -169,14 +176,19 @@ export default function Perfil() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!user?.id || !validatePwd()) return;
+    
     try {
+      console.log('📤 Cambiando contraseña del usuario:', user.id);
+      
       await apiClient.post(`/usuarios/${user.id}/change-password`, {
         currentPassword: pwdForm.currentPassword,
         newPassword: pwdForm.newPassword,
       });
-      alertSuccess('Listo', 'Tu contraseña fue actualizada.');
+      
+      alertSuccess('Contraseña actualizada', 'Tu contraseña fue actualizada correctamente.');
       closePwd();
     } catch (err) {
+      console.error('❌ Error al cambiar contraseña:', err);
       alertError('No se pudo actualizar', err.message);
     }
   };
@@ -197,9 +209,13 @@ export default function Perfil() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!user?.id) return;
+    if (!validate()) {
+      alertError('Campos incompletos', 'Revisa los datos.');
+      return;
+    }
+    
     setSaving(true);
     try {
-      if (!validate()) return alertError('Campos incompletos', 'Revisa los datos.');
       const newEmprendimiento = await apiClient.post('/emprendedores', {
         usuario_id: user.id,
         descripcion: form.descripcion,
@@ -208,6 +224,7 @@ export default function Perfil() {
         imagen: form.imagen,
         calificacion: 0,
       });
+      
       setEmprendimientos((prev) => [newEmprendimiento, ...prev]);
       alertSuccess('Emprendimiento creado', 'Tu emprendimiento fue registrado.');
       handleCloseModal();
@@ -268,7 +285,7 @@ export default function Perfil() {
               </div>
               
               <div className="hero-chips">
-                {user?.rol && <span className="pill">{user.rol === 'estudiante' ? 'Estudiante' : 'Usuario Universidad'}</span>}
+                {user?.rol && <span className="pill">{user.rol}</span>}
                 <span className="chip chip--stat">{total} emprendimiento{total !== 1 && 's'}</span>
                 {user?.verificado && <span className="chip chip--verified">✓ Verificado</span>}
               </div>
@@ -483,7 +500,7 @@ export default function Perfil() {
                 <button className="icon-btn" onClick={closePwd}><X size={20} /></button>
               </div>
               <form onSubmit={handleChangePassword} className="modal-body">
-              <div className="form-row">
+                <div className="form-row">
                   <label>Contraseña Actual</label>
                   <input
                     type="password"
@@ -504,7 +521,7 @@ export default function Perfil() {
                     value={pwdForm.newPassword}
                     onChange={(e) => setPwdForm(prev => ({ ...prev, newPassword: e.target.value }))}
                     className={pwdErrors.newPassword ? 'input-error' : ''}
-                    placeholder="Nueva contraseña"
+                    placeholder="Nueva contraseña (mínimo 6 caracteres)"
                   />
                   {pwdErrors.newPassword && <span className="error-text">{pwdErrors.newPassword}</span>}
                 </div>

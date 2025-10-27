@@ -80,9 +80,10 @@ const usuariosController = {
 
       // ✅ VALIDACIÓN DE ROL MEJORADA
       const rolesValidos = ['Emprendedor', 'Administrador', 'Usuario de la universidad'];
-      const rolFinal = rol && rolesValidos.includes(rol) ? rol : 'Usuario de la universidad';
+      let rolFinal = rol && rolesValidos.includes(rol) ? rol : 'Usuario de la universidad';
       
-      console.log('✅ Rol que se guardará:', rolFinal);
+      console.log('🔍 ROL RECIBIDO:', rol);
+      console.log('🔍 ROL QUE SE GUARDARÁ:', rolFinal);
 
       // Verificar si el email ya existe
       const { data: existente } = await supabase
@@ -98,7 +99,7 @@ const usuariosController = {
       // Encriptar contraseña
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // ✅ CORREGIDO: Usar rolFinal en lugar de rol || 'estudiante'
+      // ✅ INSERTAR USUARIO
       const { data, error } = await supabase
         .from('usuarios')
         .insert([
@@ -110,7 +111,7 @@ const usuariosController = {
             carrera: carrera || null,
             telefono: telefono || null,
             fecha_nacimiento: fecha_nacimiento || null,
-            rol: rolFinal, // ✅ CORREGIDO
+            rol: rolFinal,
             activo: true,
             verificado: false
           }
@@ -119,11 +120,31 @@ const usuariosController = {
         .single();
 
       if (error) {
-        console.error('❌ Error de Supabase:', error);
+        console.error('❌ Error de Supabase al insertar:', error);
         throw error;
       }
 
-      console.log('✅ Usuario creado en BD:', data);
+      console.log('✅ Usuario INSERTADO, Supabase devolvió:', data);
+      console.log('🔍 ROL DEVUELTO POR SUPABASE:', data?.rol);
+
+      // 🔥 SI SUPABASE CAMBIÓ EL ROL, FORZAMOS UN UPDATE
+      if (data && data.rol !== rolFinal) {
+        console.warn('⚠️ Supabase cambió el rol! Forzando actualización...');
+        
+        const { data: dataActualizada, error: errorUpdate } = await supabase
+          .from('usuarios')
+          .update({ rol: rolFinal })
+          .eq('id', data.id)
+          .select()
+          .single();
+
+        if (errorUpdate) {
+          console.error('❌ Error al forzar actualización de rol:', errorUpdate);
+        } else {
+          console.log('✅ Rol actualizado forzosamente:', dataActualizada?.rol);
+          data.rol = dataActualizada.rol; // Usar el dato actualizado
+        }
+      }
 
       // Remover contraseña
       const { password: _, ...usuarioSinPassword } = data;
@@ -149,31 +170,66 @@ const usuariosController = {
         avatar_url 
       } = req.body;
 
-      const updateData = {};
-      if (nombre) updateData.nombre = nombre;
-      if (apellido) updateData.apellido = apellido;
-      if (carrera) updateData.carrera = carrera;
-      if (telefono) updateData.telefono = telefono;
-      if (email) updateData.email = email;
-      if (fecha_nacimiento) updateData.fecha_nacimiento = fecha_nacimiento;
-      if (avatar_url) updateData.avatar_url = avatar_url;
+      console.log('🔍 Actualizando usuario ID:', id);
+      console.log('📦 Datos recibidos:', req.body);
 
+      // ✅ PRIMERO: Verificar que el usuario existe
+      const { data: usuarioExistente, error: errorBusqueda } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (errorBusqueda || !usuarioExistente) {
+        console.error('❌ Usuario no encontrado:', id);
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      console.log('✅ Usuario encontrado:', usuarioExistente.email);
+
+      // ✅ SEGUNDO: Construir objeto de actualización (solo campos que vienen)
+      const updateData = {};
+      if (nombre !== undefined) updateData.nombre = nombre;
+      if (apellido !== undefined) updateData.apellido = apellido;
+      if (carrera !== undefined) updateData.carrera = carrera;
+      if (telefono !== undefined) updateData.telefono = telefono;
+      if (email !== undefined) updateData.email = email;
+      if (fecha_nacimiento !== undefined) updateData.fecha_nacimiento = fecha_nacimiento;
+      if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+
+      console.log('📝 Campos a actualizar:', updateData);
+
+      // ✅ TERCERO: Actualizar sin usar .single() primero
       const { data, error } = await supabase
         .from('usuarios')
         .update(updateData)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error de Supabase al actualizar:', error);
+        throw error;
+      }
+
+      // ✅ CUARTO: Validar que se actualizó
+      if (!data || data.length === 0) {
+        console.error('❌ No se actualizó ningún registro');
+        return res.status(404).json({ error: 'No se pudo actualizar el usuario' });
+      }
+
+      const usuarioActualizado = data[0];
+      console.log('✅ Usuario actualizado correctamente:', usuarioActualizado.email);
 
       // Remover contraseña
-      const { password, ...usuarioSinPassword } = data;
+      const { password, ...usuarioSinPassword } = usuarioActualizado;
 
       res.json(usuarioSinPassword);
     } catch (error) {
-      console.error('Error al actualizar usuario:', error);
-      res.status(500).json({ error: 'Error al actualizar usuario' });
+      console.error('❌ Error al actualizar usuario:', error);
+      res.status(500).json({ 
+        error: 'Error al actualizar usuario',
+        details: error.message 
+      });
     }
   },
 
